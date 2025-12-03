@@ -16,6 +16,7 @@ public class HttpUploader {
             String urlStr = ConfigManager.getUploadUrl(ctx);
             String phone = ConfigManager.getPhoneNumber(ctx);
             if (urlStr == null || urlStr.isEmpty() || phone == null || phone.isEmpty()) {
+                LogBuffer.log("上传跳过: 未配置地址或号码");
                 return;
             }
             try {
@@ -34,12 +35,15 @@ public class HttpUploader {
                 int code = conn.getResponseCode();
                 if (code >= 200 && code < 300) {
                     ConfigManager.setLastUploadedId(ctx, id);
+                    LogBuffer.log("上传成功:" + id + ", code=" + code);
                 } else {
                     PendingQueue.enqueue(ctx, json);
+                    LogBuffer.log("上传失败入队:" + id + ", code=" + code);
                 }
                 conn.disconnect();
             } catch (Exception e) {
                 PendingQueue.enqueue(ctx, toJson(ConfigManager.getPhoneNumber(ctx), id, address, body, type, dateTs));
+                LogBuffer.log("上传异常入队:" + id);
             }
         }).start();
     }

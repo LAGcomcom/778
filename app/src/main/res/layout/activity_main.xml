@@ -39,6 +39,32 @@
                 android:layout_marginTop="8dp"
                 android:background="@drawable/btn_bg"
                 android:text="保存设置" />
+
+            <TextView
+                android:id="@+id/tv_log_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="日志输出"/>
+
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="160dp"
+                android:layout_marginTop="4dp">
+                <TextView
+                    android:id="@+id/tv_log"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="12sp"/>
+            </ScrollView>
+
+            <Button
+                android:id="@+id/btn_clear_log"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/btn_bg"
+                android:text="清空日志" />
         </LinearLayout>
 
         <TextView

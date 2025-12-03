@@ -27,6 +27,16 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView tvSms, tvDes;
     private Button btnSms_view, btnSms_backup, btnSaveSettings;
+    private TextView tvLog;
+    private Button btnClearLog;
+    private android.os.Handler logHandler;
+    private final Runnable logRefresh = new Runnable() {
+        @Override
+        public void run() {
+            if (tvLog != null) tvLog.setText(LogBuffer.dump());
+            if (logHandler != null) logHandler.postDelayed(this, 1000);
+        }
+    };
     private android.widget.EditText etUploadUrl, etPhone;
     private String text = "";
     private List<SmsInfo> smsInfos;
@@ -41,12 +51,17 @@ public class MainActivity extends AppCompatActivity {
         etUploadUrl = (android.widget.EditText) findViewById(R.id.et_upload_url);
         etPhone = (android.widget.EditText) findViewById(R.id.et_phone);
         btnSaveSettings = (Button) findViewById(R.id.btn_save_settings);
+        tvLog = (TextView) findViewById(R.id.tv_log);
+        btnClearLog = (Button) findViewById(R.id.btn_clear_log);
         smsInfos = new ArrayList<SmsInfo>();
         String savedUrl = ConfigManager.getUploadUrl(this);
         String savedPhone = ConfigManager.getPhoneNumber(this);
         if (savedUrl != null) etUploadUrl.setText(savedUrl);
         if (savedPhone != null) etPhone.setText(savedPhone);
-        maybeStartService();
+        LogBuffer.log("应用启动");
+        logHandler = new android.os.Handler(getMainLooper());
+        logHandler.post(logRefresh);
+        ensurePermissionsAndStart();
         // 查看短消息
         btnSms_view = (Button) findViewById(R.id.btn_sms_view);
         btnSms_view.setOnClickListener(new Button.OnClickListener() {
@@ -73,20 +88,25 @@ public class MainActivity extends AppCompatActivity {
                 ConfigManager.setPhoneNumber(MainActivity.this, phone);
                 Toast.makeText(MainActivity.this, "设置已保存", Toast.LENGTH_SHORT).show();
                 ensurePermissionsAndStart();
+                LogBuffer.log("保存设置:" + url + ", " + phone);
+            }
+        });
+
+        btnClearLog.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                LogBuffer.clear();
+                tvLog.setText("");
             }
         });
     }
 
     private void maybeStartService() {
-        String url = ConfigManager.getUploadUrl(this);
-        String phone = ConfigManager.getPhoneNumber(this);
-        if (url != null && url.length() > 0 && phone != null && phone.length() > 0) {
-            android.content.Intent i = new android.content.Intent(this, SmsForegroundService.class);
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                startForegroundService(i);
-            } else {
-                startService(i);
-            }
+        android.content.Intent i = new android.content.Intent(this, SmsForegroundService.class);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            startForegroundService(i);
+        } else {
+            startService(i);
         }
     }
 
@@ -129,19 +149,29 @@ public class MainActivity extends AppCompatActivity {
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     getSms();
                     ensurePermissionsAndStart();
+                    LogBuffer.log("授权READ_SMS成功");
                 } else {
                     Toast.makeText(this, "权限被拒绝", Toast.LENGTH_SHORT).show();
+                    LogBuffer.log("授权READ_SMS拒绝");
                 }
                 break;
             case 2:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     maybeStartService();
+                    LogBuffer.log("授权POST_NOTIFICATIONS成功");
                 } else {
                     Toast.makeText(this, "通知权限被拒绝", Toast.LENGTH_SHORT).show();
+                    LogBuffer.log("授权POST_NOTIFICATIONS拒绝");
                 }
                 break;
             default:
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (logHandler != null) logHandler.removeCallbacksAndMessages(null);
+        super.onDestroy();
     }
 
     // 读取短消息并显示

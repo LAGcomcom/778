@@ -29,10 +29,13 @@ public class SmsForegroundService extends Service {
                 .setOngoing(true)
                 .build();
         startForeground(1, notification);
+        LogBuffer.log("前台服务启动");
         observer = new SmsContentObserver(getContentResolver(), this);
         getContentResolver().registerContentObserver(Uri.parse("content://sms"), true, observer);
+        LogBuffer.log("已注册短信监听");
         retryManager = new PendingRetryManager(this);
         retryManager.start();
+        LogBuffer.log("启动失败重试管理");
     }
 
     @Override
@@ -48,6 +51,7 @@ public class SmsForegroundService extends Service {
         if (retryManager != null) {
             retryManager.stop();
         }
+        LogBuffer.log("前台服务结束");
         super.onDestroy();
     }
 

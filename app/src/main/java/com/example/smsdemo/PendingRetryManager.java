@@ -29,6 +29,7 @@ public class PendingRetryManager {
 
     public void start() {
         handler.post(task);
+        LogBuffer.log("开始定时重试");
     }
 
     public void stop() {
@@ -39,16 +40,20 @@ public class PendingRetryManager {
         File f = new File(PathUtils.INSTANCE.concatFilePath(PathUtils.INSTANCE.getAppPath(), "pending.jsonl"));
         if (!f.exists()) return;
         List<String> failures = new ArrayList<>();
+        int total = 0;
+        int success = 0;
         try {
             BufferedReader br = new BufferedReader(new FileReader(f));
             String line;
             while ((line = br.readLine()) != null) {
                 if (line.trim().isEmpty()) continue;
+                total++;
                 try {
                     int code = SimplePoster.post(ConfigManager.getUploadUrl(ctx), line);
                     if (code < 200 || code >= 300) {
                         failures.add(line);
                     }
+                    else success++;
                 } catch (Exception e) {
                     failures.add(line);
                 }
@@ -67,6 +72,7 @@ public class PendingRetryManager {
             fw.close();
         } catch (Exception ignored) {
         }
+        LogBuffer.log("重试完成: 总计=" + total + ", 成功=" + success + ", 剩余=" + failures.size());
     }
 
     public static class SimplePoster {

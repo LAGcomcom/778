@@ -39,6 +39,7 @@ public class SmsContentObserver extends ContentObserver {
                         if (type == Telephony.Sms.MESSAGE_TYPE_INBOX) {
                             if (!recentIds.contains(_id) && _id > ConfigManager.getLastUploadedId(ctx)) {
                                 recentIds.add(_id);
+                                LogBuffer.log("检测到新短信:" + _id + ", " + address);
                                 HttpUploader.enqueueUpload(ctx, _id, address, body, type, date);
                             }
                         }
