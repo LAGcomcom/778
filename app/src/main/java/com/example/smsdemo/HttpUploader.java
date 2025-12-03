@@ -43,7 +43,7 @@ public class HttpUploader {
                 conn.disconnect();
             } catch (Exception e) {
                 PendingQueue.enqueue(ctx, toJson(ConfigManager.getPhoneNumber(ctx), id, address, body, type, dateTs));
-                LogBuffer.log("上传异常入队:" + id);
+                LogBuffer.log("上传异常入队:" + id + ", " + e.getClass().getSimpleName() + ":" + (e.getMessage() == null ? "" : e.getMessage()));
             }
         }).start();
     }
