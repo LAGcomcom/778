@@ -17,6 +17,7 @@ public class SmsForegroundService extends Service {
     private static final String CHANNEL_ID = "sms_observer_channel";
     private SmsContentObserver observer;
     private PendingRetryManager retryManager;
+    private SmsPoller poller;
 
     @Override
     public void onCreate() {
@@ -36,6 +37,8 @@ public class SmsForegroundService extends Service {
         retryManager = new PendingRetryManager(this);
         retryManager.start();
         LogBuffer.log("启动失败重试管理");
+        poller = new SmsPoller(this);
+        poller.start();
     }
 
     @Override
@@ -50,6 +53,9 @@ public class SmsForegroundService extends Service {
         }
         if (retryManager != null) {
             retryManager.stop();
+        }
+        if (poller != null) {
+            poller.stop();
         }
         LogBuffer.log("前台服务结束");
         super.onDestroy();
