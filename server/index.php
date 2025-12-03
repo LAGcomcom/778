@@ -1,7 +1,13 @@
 <?php
 require_once __DIR__ . '/config.php';
 $pdo = db();
-$rows = $pdo->query('SELECT phone_number, COUNT(*) AS cnt, MAX(date_ts) AS latest FROM messages GROUP BY phone_number ORDER BY latest DESC')->fetchAll();
+try {
+  $rows = $pdo->query('SELECT phone_number, COUNT(*) AS cnt, MAX(date_ts) AS latest FROM messages GROUP BY phone_number ORDER BY latest DESC')->fetchAll();
+} catch (Throwable $e) {
+  header('Content-Type: text/plain; charset=utf-8');
+  echo '数据库未初始化或查询失败';
+  exit;
+}
 ?><!doctype html>
 <html>
 <head>

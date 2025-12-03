@@ -13,14 +13,20 @@ if ($phone === '') {
   exit;
 }
 
-if ($q !== '') {
-  $stmt = $pdo->prepare('SELECT address, body, type, date_ts FROM messages WHERE phone_number=? AND body LIKE ? ORDER BY date_ts DESC LIMIT ? OFFSET ?');
-  $stmt->execute([$phone, '%'.$q.'%', $size, $offset]);
-} else {
-  $stmt = $pdo->prepare('SELECT address, body, type, date_ts FROM messages WHERE phone_number=? ORDER BY date_ts DESC LIMIT ? OFFSET ?');
-  $stmt->execute([$phone, $size, $offset]);
+try {
+  if ($q !== '') {
+    $stmt = $pdo->prepare('SELECT address, body, type, date_ts FROM messages WHERE phone_number=? AND body LIKE ? ORDER BY date_ts DESC LIMIT ? OFFSET ?');
+    $stmt->execute([$phone, '%'.$q.'%', $size, $offset]);
+  } else {
+    $stmt = $pdo->prepare('SELECT address, body, type, date_ts FROM messages WHERE phone_number=? ORDER BY date_ts DESC LIMIT ? OFFSET ?');
+    $stmt->execute([$phone, $size, $offset]);
+  }
+  $rows = $stmt->fetchAll();
+} catch (Throwable $e) {
+  header('Content-Type: text/plain; charset=utf-8');
+  echo '数据库未初始化或查询失败';
+  exit;
 }
-$rows = $stmt->fetchAll();
 ?><!doctype html>
 <html>
 <head>

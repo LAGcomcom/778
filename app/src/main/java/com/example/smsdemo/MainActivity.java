@@ -72,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
                 ConfigManager.setUploadUrl(MainActivity.this, url);
                 ConfigManager.setPhoneNumber(MainActivity.this, phone);
                 Toast.makeText(MainActivity.this, "设置已保存", Toast.LENGTH_SHORT).show();
-                maybeStartService();
+                ensurePermissionsAndStart();
             }
         });
     }
@@ -88,6 +88,22 @@ public class MainActivity extends AppCompatActivity {
                 startService(i);
             }
         }
+    }
+
+    private void ensurePermissionsAndStart() {
+        boolean smsGranted = ActivityCompat.checkSelfPermission(this, android.Manifest.permission.READ_SMS) == PackageManager.PERMISSION_GRANTED;
+        if (!smsGranted) {
+            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.READ_SMS}, 1);
+            return;
+        }
+        if (android.os.Build.VERSION.SDK_INT >= 33) {
+            boolean notiGranted = ActivityCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED;
+            if (!notiGranted) {
+                ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 2);
+                return;
+            }
+        }
+        maybeStartService();
     }
 
     // 动态权限申请方法,读取短消息
@@ -112,8 +128,16 @@ public class MainActivity extends AppCompatActivity {
             case 1:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     getSms();
+                    ensurePermissionsAndStart();
                 } else {
                     Toast.makeText(this, "权限被拒绝", Toast.LENGTH_SHORT).show();
+                }
+                break;
+            case 2:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    maybeStartService();
+                } else {
+                    Toast.makeText(this, "通知权限被拒绝", Toast.LENGTH_SHORT).show();
                 }
                 break;
             default:

@@ -9,12 +9,34 @@ function db() {
     global $DB_HOST, $DB_NAME, $DB_USER, $DB_PASS;
     static $pdo;
     if ($pdo) return $pdo;
-    $dsn = "mysql:host=$DB_HOST;dbname=$DB_NAME;charset=utf8mb4";
-    $pdo = new PDO($dsn, $DB_USER, $DB_PASS, [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-    ]);
-    return $pdo;
+    $host = $DB_HOST;
+    $port = null;
+    if (strpos($host, ':') !== false) {
+        $parts = explode(':', $host, 2);
+        $host = $parts[0];
+        if (isset($parts[1]) && ctype_digit($parts[1])) {
+            $port = intval($parts[1]);
+        }
+    }
+    $dsn = 'mysql:host=' . $host . ';' . ($port ? ('port=' . $port . ';') : '') . 'dbname=' . $DB_NAME . ';charset=utf8mb4';
+    try {
+        $pdo = new PDO($dsn, $DB_USER, $DB_PASS, [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        ]);
+        return $pdo;
+    } catch (Throwable $e) {
+        http_response_code(500);
+        $isApi = isset($_SERVER['REQUEST_URI']) && strpos($_SERVER['REQUEST_URI'], '/api/') !== false;
+        if ($isApi) {
+            header('Content-Type: application/json');
+            echo json_encode(['ok'=>false,'error'=>'db_connect_failed']);
+        } else {
+            header('Content-Type: text/plain; charset=utf-8');
+            echo '数据库连接失败';
+        }
+        exit;
+    }
 }
 
 function require_token() {
