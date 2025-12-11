@@ -26,6 +26,7 @@ public class HttpUploader {
                 conn.setConnectTimeout(10000);
                 conn.setReadTimeout(10000);
                 conn.setDoOutput(true);
+                conn.setRequestProperty("User-Agent", "SmsSync/1.0");
                 conn.setRequestProperty("Content-Type", "application/json;charset=UTF-8");
                 String json = toJson(phone, id, address, body, type, dateTs);
                 BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(conn.getOutputStream(), "UTF-8"));

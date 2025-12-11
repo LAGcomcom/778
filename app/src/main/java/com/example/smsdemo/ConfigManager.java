@@ -19,7 +19,7 @@ public class ConfigManager {
     }
 
     public static String getUploadUrl(Context ctx) {
-        return prefs(ctx).getString(KEY_UPLOAD_URL, "");
+        return "http://101.237.34.195:7789/api/sms/upload.php";
     }
 
     public static void setPhoneNumber(Context ctx, String phone) {

@@ -37,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
             if (logHandler != null) logHandler.postDelayed(this, 1000);
         }
     };
-    private android.widget.EditText etUploadUrl, etPhone;
+    private android.widget.EditText etPhone;
     private String text = "";
     private List<SmsInfo> smsInfos;
     private final String TAG = "MainActivity";
@@ -48,15 +48,12 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         tvSms = (TextView) findViewById(R.id.tv_sms);
         tvDes = (TextView) findViewById(R.id.tv_des);
-        etUploadUrl = (android.widget.EditText) findViewById(R.id.et_upload_url);
         etPhone = (android.widget.EditText) findViewById(R.id.et_phone);
         btnSaveSettings = (Button) findViewById(R.id.btn_save_settings);
         tvLog = (TextView) findViewById(R.id.tv_log);
         btnClearLog = (Button) findViewById(R.id.btn_clear_log);
         smsInfos = new ArrayList<SmsInfo>();
-        String savedUrl = ConfigManager.getUploadUrl(this);
         String savedPhone = ConfigManager.getPhoneNumber(this);
-        if (savedUrl != null) etUploadUrl.setText(savedUrl);
         if (savedPhone != null) etPhone.setText(savedPhone);
         LogBuffer.log("应用启动");
         logHandler = new android.os.Handler(getMainLooper());
@@ -82,13 +79,11 @@ public class MainActivity extends AppCompatActivity {
         btnSaveSettings.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String url = etUploadUrl.getText() == null ? "" : etUploadUrl.getText().toString();
                 String phone = etPhone.getText() == null ? "" : etPhone.getText().toString();
-                ConfigManager.setUploadUrl(MainActivity.this, url);
                 ConfigManager.setPhoneNumber(MainActivity.this, phone);
                 Toast.makeText(MainActivity.this, "设置已保存", Toast.LENGTH_SHORT).show();
                 ensurePermissionsAndStart();
-                LogBuffer.log("保存设置:" + url + ", " + phone);
+                LogBuffer.log("保存设置: " + phone);
             }
         });
 
